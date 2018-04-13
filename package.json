@@ -1,0 +1,10 @@
+{
+  "name": "finsoft-one",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "NODE_PATH=$(pwd) node src config/default"
+  },
+  "dependencies": {
+    "express": "^4.16.3"
+  }
+}
