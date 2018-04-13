@@ -1,50 +1,26 @@
 const Service = require('src/libs/service');
+const CoinMarketCapApi = require('src/libs/api/coinmarketcap');
+const Rate = require('src/libs/rate');
 
 /**
  * Class for work with api of https://coinmarketcap.com
  */
 class CoinMarketCapService extends Service {
-  getBaseUrl() {
-    return 'https://api.coinmarketcap.com/v1/';
+  static getApiConstructor() {
+    return CoinMarketCapApi;
   }
 
-  normalizeData(data) {
-    return data.map(item => ({
-      id: item.symbol,
-      service: 'coinmarketcap',
-      volume: parseFloat(item['24h_volume_usd'])
-    }));
-  }
-
+  /**
+   * Return leader of currencies by trading volumes for last 24 hours
+   * @param {string} quote
+   * @param {number} limit
+   * @return {Promise<Rate[]>}
+   */
   async getLeaders(quote, limit) {
-    return this.request('ticker/', { convert: quote, limit });
-  }
-
-  /**
-   *
-   * Available convert values: "AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF",
-   * "IDR", "ILS", "INR", "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP", "PKR", "PLN", "RUB", "SEK", "SGD", "THB",
-   * "TRY", "TWD", "ZAR"
-   *
-   * @param {Object} params
-   * @param {number} [params.start] return results from rank [start] and above
-   * @param {number} [params.limit] return a maximum of [limit] results (default is 100, use 0 to return all results)
-   * @param {string} [params.convert] return price, 24h volume, and market cap in terms of another currency.
-   * @return {Promise<any>}
-   */
-  async getTickers(params = {}) {
-    return this.request('ticker/', params)
-  }
-
-  /**
-   *
-   * @param {string} id Ticker id
-   * @param {Object} [params]
-   * @param {string} [params.convert] return price, 24h volume, and market cap in terms of another currency.
-   * @return {Promise<any>}
-   */
-  async getTickerById(id, params = {}) {
-    return this.request(`ticker/${id}/`, params);
+    const data = await this.api.getTickers({ convert: quote, limit });
+    return data
+      .map(item =>
+        new Rate(this.getId(), quote, item.symbol, parseFloat(item['24h_volume_usd']), parseFloat(item.price_usd)));
   }
 }
 

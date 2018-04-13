@@ -1,41 +1,38 @@
 const Service = require('src/libs/service');
+const CryptoCompareApi = require('src/libs/api/cryptocompare');
+const Rate = require('src/libs/rate');
 
 /**
  * Class for work with api of https://www.cryptocompare.com
  */
 class CryptoCompareService extends Service {
-  getBaseUrl() {
-    return 'https://min-api.cryptocompare.com/data/';
-  }
-
-  prepareData(data) {
-    return data['Data'];
+  static getApiConstructor() {
+    return CryptoCompareApi;
   }
 
   /**
-   * Get top pairs by volume for a currency (always uses our aggregated data). The number of pairs you get is the
-   * minimum of the limit you set (default 5) and the total number of pairs available
-   * @param {Object} params
-   * @param {string} params.fsym From Symbol
-   * @param {string} params.tsym To Symbol
-   * @param {number} [params.limit=5] Max 2000
-   * @param {boolean} [params.sign=false] If set to true, the server will sign the request
-   * @return {Promise<Object>}
+   * Return leader of currencies by trading volumes for last 24 hours
+   * @param {string} quote
+   * @param {number} limit
+   * @return {Promise<Rate[]>}
    */
-  async getTopPairs(params = {}) {
-    return this.request('top/pairs', params);
-  }
-
-  normalizeData(data) {
-    return data.map(item => ({
-      id: item.toSymbol,
-      service: 'cryptocompare',
-      volume: item.volume24h
-    }));
-  }
-
   async getLeaders(quote, limit) {
-    return this.request('top/pairs', { fsym: quote, limit });
+    limit = limit - 1; // the limit fix for their api
+
+    const data = await this.api.getTopVolumes({ tsym: quote, limit });
+    const symbols = [];
+
+    data.Data.forEach(item => symbols.push(item.SYMBOL));
+
+    const prices = await this.api.getPrice({
+      fsym: quote,
+      tsyms: symbols.slice(0, 500).join()
+    });
+
+    return data.Data.map(item => {
+      const price = prices.hasOwnProperty(item.SYMBOL) ? prices[item.SYMBOL] : 0;
+      return new Rate(this.getId(), quote, item.SYMBOL, item.VOLUME24HOURTO, price);
+    });
   }
 }
 
