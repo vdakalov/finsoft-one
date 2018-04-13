@@ -1,13 +1,13 @@
 /**
  * Return minimum volume currency from leaders
  */
-function maxFromLeaders(...services) {
+function maxPriceFromLeaders(...services) {
   let table = {};
 
   for (const rates of services) {
     for (const rate of rates) {
       if (table.hasOwnProperty(rate.to)) {
-        if (rate.volume24h > table[rate.to].volume24h) {
+        if (rate.price > table[rate.to].price) {
           table[rate.to] = rate;
         }
       } else {
@@ -19,4 +19,4 @@ function maxFromLeaders(...services) {
   return Object.values(table);
 }
 
-module.exports.maxFromLeaders = maxFromLeaders;
+module.exports.maxPriceFromLeaders = maxPriceFromLeaders;

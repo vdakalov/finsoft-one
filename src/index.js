@@ -19,7 +19,7 @@ app.get('/', async (request, response) => {
     data.push(await cryptoCompareService.getLeaders(QUOTE, LIMIT));
 
     const result = utils
-      .maxFromLeaders(...data)
+      .maxPriceFromLeaders(...data)
       .sort((a, b) => b.volume24h - a.volume24h)
       .slice(0, LIMIT);
 
